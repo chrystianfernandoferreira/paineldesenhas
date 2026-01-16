@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, height=device-height,
+               initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>Painel de Atendimento</title>
+
+<style>
+/* RESET E BASE */
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: #111827;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #fff;
+}
+
+/* CONTAINER GERAL */
+.screen {
+    min-height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(135deg, #7f1d1d, #374151);
+}
+
+/* CABEÇALHO */
+.header {
+    background: #991b1b;
+    text-align: center;
+    padding: 2vmin;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: clamp(75px, 4vmin, 92px);
+}
+
+.senha {
+    font-size: clamp(140px, 14vmin, 200px);
+    font-weight: bold;
+    color: #fde047;
+    line-height: 1;
+}
+
+.setor {
+    font-size: clamp(75px, 3.5vmin, 46px);
+}
+
+.horarios {
+    font-size: clamp(20px, 2.5vmin, 30px);
+    margin-top: 0.5vmin;
+}
+
+/* CONTEÚDO PRINCIPAL */
+.content {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 3vmin;
+    padding: 3vmin;
+}
+
+/* SEÇÕES */
+.section {
+    background: #f3f4f6;
+    color: #000;
+    border-radius: 2vmin;
+    padding: 3vmin;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.section h2 {
+    margin-top: 0;
+    font-size: clamp(40px, 3.5vmin, 54px);
+    color: #7f1d1d;
+}
+
+.info {
+    font-size: clamp(40px, 3vmin, 46px);
+}
+
+/* CONTROLES */
+.controls {
+    background: #020617;
+    text-align: center;
+    padding: 1.5vmin;
+}
+
+button {
+    font-size: clamp(16px, 2.5vmin, 30px);
+    padding: 1vmin 3vmin;
+    margin: 0.5vmin;
+    border: none;
+    border-radius: 1.5vmin;
+    cursor: pointer;
+}
+
+.doc { background: #dc2626; color: #fff; }
+.mat { background: #334155; color: #fff; }
+.reset { background: #f59e0b; color: #000; }
+
+/* RODAPÉ */
+.footer {
+    background: #020617;
+    text-align: center;
+    padding: 1vmin;
+    font-size: clamp(14px, 2.2vmin, 22px);
+    color: #e5e7eb;
+    flex-shrink: 0;
+}
+</style>
+</head>
+
+<body>
+
+<div class="screen">
+
+    <div class="header">
+        <h1>SENHA EM ATENDIMENTO</h1>
+        <div class="senha" id="senha">--</div>
+        <div class="setor" id="setor">AGUARDANDO</div>
+        <div class="horarios">
+            Atendimento: <strong id="horaAtendimento">--:--</strong> |
+            Hora Atual: <strong id="horaAtual">--:--:--</strong>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="section">
+            <h2>Documentação</h2>
+            <div class="info">Atendendo: <strong id="docAtual">--</strong></div>
+            <div class="info">Próxima: <strong id="docProx">1</strong></div>
+        </div>
+
+        <div class="section">
+            <h2>Matrícula</h2>
+            <div class="info">Atendendo: <strong id="matAtual">--</strong></div>
+            <div class="info">Próxima: <strong id="matProx">1</strong></div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="doc" onclick="chamar('DOCUMENTACAO')">📄 Documentação (F1)</button>
+        <button class="mat" onclick="chamar('MATRICULA')">📝 Matrícula (F2)</button>
+        <button class="reset" onclick="redefinir()">🔄 Redefinir (F3)</button>
+    </div>
+
+    <div class="footer">
+        Etec Sylvio de Mattos Carvalho • Centro Paula Souza
+    </div>
+
+</div>
+
+<audio id="tindon"
+       src="https://actions.google.com/sounds/v1/alarms/airport_chime.ogg"></audio>
+
+<script>
+/* ESTADO */
+let estado = JSON.parse(localStorage.getItem("estado")) || {
+    docAtual: "--", docProx: 1,
+    matAtual: "--", matProx: 1,
+    senha: "--",
+    setor: "AGUARDANDO",
+    horaAtendimento: "--:--"
+};
+
+/* RELÓGIO ATUAL */
+function atualizarHoraAtual() {
+    document.getElementById("horaAtual").textContent =
+        new Date().toLocaleTimeString("pt-BR");
+}
+setInterval(atualizarHoraAtual, 1000);
+atualizarHoraAtual();
+
+/* HORA DO ATENDIMENTO */
+function horaAtendimentoAtual() {
+    return new Date().toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+}
+
+/* VOZ FEMININA PT-BR */
+function obterVozFemininaPtBR() {
+    const vozes = speechSynthesis.getVoices();
+    return vozes.find(v => v.lang === "pt-BR") || null;
+}
+
+function falar(texto) {
+    const msg = new SpeechSynthesisUtterance(texto);
+    msg.lang = "pt-BR";
+    msg.rate = 0.9;
+    msg.pitch = 1.1;
+    msg.voice = obterVozFemininaPtBR();
+    speechSynthesis.speak(msg);
+}
+
+/* ATUALIZA TELA */
+function atualizarTela() {
+    senha.textContent = estado.senha;
+    setor.textContent = estado.setor;
+    horaAtendimento.textContent = estado.horaAtendimento;
+    docAtual.textContent = estado.docAtual;
+    docProx.textContent = estado.docProx;
+    matAtual.textContent = estado.matAtual;
+    matProx.textContent = estado.matProx;
+    localStorage.setItem("estado", JSON.stringify(estado));
+}
+atualizarTela();
+
+/* CHAMAR SENHA */
+function chamar(tipo) {
+    document.getElementById("tindon").play();
+
+    setTimeout(() => {
+        estado.horaAtendimento = horaAtendimentoAtual();
+
+        if (tipo === "DOCUMENTACAO") {
+            estado.docAtual = estado.docProx.toString();
+            estado.docProx++;
+            estado.senha = estado.docAtual;
+            estado.setor = "DOCUMENTAÇÃO";
+            falar(`Senha ${estado.docAtual}, documentação`);
+        } else {
+            estado.matAtual = estado.matProx.toString();
+            estado.matProx++;
+            estado.senha = estado.matAtual;
+            estado.setor = "MATRÍCULA";
+            falar(`Senha ${estado.matAtual}, matrícula`);
+        }
+        atualizarTela();
+    }, 900);
+}
+
+/* REDEFINIR */
+function redefinir() {
+    if (!confirm("Deseja redefinir todas as senhas?")) return;
+
+    estado = {
+        docAtual: "--", docProx: 1,
+        matAtual: "--", matProx: 1,
+        senha: "--",
+        setor: "AGUARDANDO",
+        horaAtendimento: "--:--"
+    };
+    atualizarTela();
+}
+
+/* ATALHOS */
+document.addEventListener("keydown", e => {
+    if (e.key === "F1") { e.preventDefault(); chamar("DOCUMENTACAO"); }
+    if (e.key === "F2") { e.preventDefault(); chamar("MATRICULA"); }
+    if (e.key === "F3") { e.preventDefault(); redefinir(); }
+});
+
+/* MODO APRESENTAÇÃO */
+document.documentElement.requestFullscreen?.().catch(() => {});
+speechSynthesis.onvoiceschanged = () => {};
+</script>
+
+</body>
+</html>
