@@ -9,7 +9,6 @@
 <title>Painel de Atendimento</title>
 
 <style>
-/* RESET E BASE */
 * {
     box-sizing: border-box;
 }
@@ -61,7 +60,7 @@ html, body {
     margin-top: 0.5vmin;
 }
 
-/* CONTEÚDO PRINCIPAL */
+/* CONTEÚDO */
 .content {
     flex: 1;
     display: grid;
@@ -70,7 +69,6 @@ html, body {
     padding: 3vmin;
 }
 
-/* SEÇÕES */
 .section {
     background: #f3f4f6;
     color: #000;
@@ -119,12 +117,11 @@ button {
     padding: 1vmin;
     font-size: clamp(14px, 2.2vmin, 22px);
     color: #e5e7eb;
-    flex-shrink: 0;
 }
 </style>
 </head>
 
-<body>
+<body onclick="entrarTelaCheia()">
 
 <div class="screen">
 
@@ -168,6 +165,13 @@ button {
        src="https://actions.google.com/sounds/v1/alarms/airport_chime.ogg"></audio>
 
 <script>
+/* FULLSCREEN VIA CLIQUE */
+function entrarTelaCheia() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+    }
+}
+
 /* ESTADO */
 let estado = JSON.parse(localStorage.getItem("estado")) || {
     docAtual: "--", docProx: 1,
@@ -177,15 +181,13 @@ let estado = JSON.parse(localStorage.getItem("estado")) || {
     horaAtendimento: "--:--"
 };
 
-/* RELÓGIO ATUAL */
+/* RELÓGIO */
 function atualizarHoraAtual() {
-    document.getElementById("horaAtual").textContent =
-        new Date().toLocaleTimeString("pt-BR");
+    horaAtual.textContent = new Date().toLocaleTimeString("pt-BR");
 }
 setInterval(atualizarHoraAtual, 1000);
 atualizarHoraAtual();
 
-/* HORA DO ATENDIMENTO */
 function horaAtendimentoAtual() {
     return new Date().toLocaleTimeString("pt-BR", {
         hour: "2-digit",
@@ -193,10 +195,9 @@ function horaAtendimentoAtual() {
     });
 }
 
-/* VOZ FEMININA PT-BR */
-function obterVozFemininaPtBR() {
-    const vozes = speechSynthesis.getVoices();
-    return vozes.find(v => v.lang === "pt-BR") || null;
+/* VOZ */
+function obterVozPtBR() {
+    return speechSynthesis.getVoices().find(v => v.lang === "pt-BR");
 }
 
 function falar(texto) {
@@ -204,7 +205,7 @@ function falar(texto) {
     msg.lang = "pt-BR";
     msg.rate = 0.9;
     msg.pitch = 1.1;
-    msg.voice = obterVozFemininaPtBR();
+    msg.voice = obterVozPtBR();
     speechSynthesis.speak(msg);
 }
 
@@ -221,22 +222,19 @@ function atualizarTela() {
 }
 atualizarTela();
 
-/* CHAMAR SENHA */
+/* CHAMAR */
 function chamar(tipo) {
-    document.getElementById("tindon").play();
-
+    tindon.play();
     setTimeout(() => {
         estado.horaAtendimento = horaAtendimentoAtual();
 
         if (tipo === "DOCUMENTACAO") {
-            estado.docAtual = estado.docProx.toString();
-            estado.docProx++;
+            estado.docAtual = estado.docProx++;
             estado.senha = estado.docAtual;
             estado.setor = "DOCUMENTAÇÃO";
             falar(`Senha ${estado.docAtual}, documentação`);
         } else {
-            estado.matAtual = estado.matProx.toString();
-            estado.matProx++;
+            estado.matAtual = estado.matProx++;
             estado.senha = estado.matAtual;
             estado.setor = "MATRÍCULA";
             falar(`Senha ${estado.matAtual}, matrícula`);
@@ -248,7 +246,6 @@ function chamar(tipo) {
 /* REDEFINIR */
 function redefinir() {
     if (!confirm("Deseja redefinir todas as senhas?")) return;
-
     estado = {
         docAtual: "--", docProx: 1,
         matAtual: "--", matProx: 1,
@@ -266,8 +263,7 @@ document.addEventListener("keydown", e => {
     if (e.key === "F3") { e.preventDefault(); redefinir(); }
 });
 
-/* MODO APRESENTAÇÃO */
-document.documentElement.requestFullscreen?.().catch(() => {});
+/* VOZES */
 speechSynthesis.onvoiceschanged = () => {};
 </script>
 
