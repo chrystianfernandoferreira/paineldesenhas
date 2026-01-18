@@ -6,245 +6,144 @@
 <title>Painel de Atendimento</title>
 
 <style>
-* { box-sizing: border-box; }
-
-html, body {
+body {
     margin: 0;
-    min-height: 100dvh;
     background: #111827;
-    font-family: Arial, Helvetica, sans-serif;
     color: #fff;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
-.screen {
-    min-height: 100dvh;
+.container {
     display: flex;
     flex-direction: column;
-    background: linear-gradient(135deg, #7f1d1d, #374151);
-}
-
-.header {
-    background: #991b1b;
-    text-align: center;
+    height: 100vh;
     padding: 20px;
 }
 
-.senha {
-    font-size: 140px;
-    font-weight: bold;
-    color: #fde047;
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
 }
 
-.setor {
-    font-size: 48px;
-}
-
-.horarios {
-    font-size: 20px;
-}
-
-.content {
+.status {
     flex: 1;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 4rem;
+    background: #1f2933;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.buttons {
+    display: flex;
+    justify-content: center;
     gap: 20px;
-    padding: 20px;
-}
-
-.section {
-    background: #f3f4f6;
-    color: #000;
-    border-radius: 20px;
-    padding: 30px;
-    text-align: center;
-}
-
-.controls {
-    background: #020617;
-    text-align: center;
-    padding: 20px;
 }
 
 button {
-    font-size: 22px;
-    padding: 12px 22px;
-    margin: 6px;
+    font-size: 1.2rem;
+    padding: 15px 25px;
     border: none;
-    border-radius: 12px;
+    border-radius: 10px;
     cursor: pointer;
 }
 
-.doc { background: #dc2626; color: #fff; }
-.mat { background: #334155; color: #fff; }
-.reset { background: #f59e0b; color: #000; }
-.audio { background: #16a34a; color: #fff; }
-
-.footer {
-    background: #020617;
-    text-align: center;
-    padding: 14px;
-}
+.doc { background: #2563eb; color: white; }
+.mat { background: #16a34a; color: white; }
+.reset { background: #dc2626; color: white; }
+.sound { background: #f59e0b; color: black; }
 </style>
 </head>
 
 <body>
 
-<div class="screen">
+<div class="container">
+    <h1>Painel de Atendimento</h1>
 
-    <div class="header">
-        <h1>SENHA EM ATENDIMENTO</h1>
-        <div class="senha" id="senha">--</div>
-        <div class="setor" id="setor">AGUARDANDO</div>
-        <div class="horarios">
-            Atendimento: <strong id="horaAtendimento">--:--</strong> |
-            Hora Atual: <strong id="horaAtual">--:--:--</strong>
-        </div>
-    </div>
+    <div class="status" id="status">AGUARDANDO</div>
 
-    <div class="content">
-        <div class="section">
-            <h2>Documentação</h2>
-            <p>Atual: <strong id="docAtual">--</strong></p>
-            <p>Próxima: <strong id="docProx">1</strong></p>
-        </div>
-
-        <div class="section">
-            <h2>Matrícula</h2>
-            <p>Atual: <strong id="matAtual">--</strong></p>
-            <p>Próxima: <strong id="matProx">1</strong></p>
-        </div>
-    </div>
-
-    <div class="controls">
-        <button class="audio" onclick="ativarAudio()">🔊 Ativar Som</button><br><br>
-        <button class="doc" onclick="chamar('DOCUMENTACAO')">📄 Documentação</button>
-        <button class="mat" onclick="chamar('MATRICULA')">📝 Matrícula</button>
-        <button class="reset" onclick="redefinir()">🔄 Redefinir</button>
-    </div>
-
-    <div class="footer">
-        Etec Sylvio de Mattos Carvalho • Centro Paula Souza
+    <div class="buttons">
+        <button class="doc" onclick="setStatus('DOCUMENTAÇÃO')">Documentação (F1)</button>
+        <button class="mat" onclick="setStatus('MATRÍCULA')">Matrícula (F2)</button>
+        <button class="reset" onclick="resetar()">Redefinir (F3)</button>
+        <button class="sound" onclick="ativarSom()">Ativar Som (F4)</button>
     </div>
 </div>
 
-<audio id="tindon" src="https://actions.google.com/sounds/v1/alarms/airport_chime.ogg"></audio>
+<!-- SOM -->
+<audio id="audio" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, onValue, runTransaction, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-/* CONFIG FIREBASE */
-const firebaseConfig = {
-  apiKey: "AIzaSyCfaPNHgxrem88R7x8dKD9j2SzTYPm9v10",
-  authDomain: "painel-senhas-etec.firebaseapp.com",
-  databaseURL: "https://painel-senhas-etec-default-rtdb.firebaseio.com",
-  projectId: "painel-senhas-etec",
-  storageBucket: "painel-senhas-etec.appspot.com",
-  messagingSenderId: "52328553080",
-  appId: "1:52328553080:web:1fcdda82a6bdbf70732b8d"
+<script>
+// 🔥 CONFIGURAÇÃO FIREBASE (SUBSTITUA PELAS SUAS)
+var firebaseConfig = {
+    apiKey: "SUA_API_KEY",
+    authDomain: "SEU_PROJETO.firebaseapp.com",
+    databaseURL: "https://SEU_PROJETO-default-rtdb.firebaseio.com",
+    projectId: "SEU_PROJETO",
+    storageBucket: "SEU_PROJETO.appspot.com",
+    messagingSenderId: "SEU_ID",
+    appId: "SEU_APP_ID"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const estadoRef = ref(db, "estado");
+firebase.initializeApp(firebaseConfig);
 
-/* RELÓGIO */
-setInterval(() => {
-  horaAtual.textContent = new Date().toLocaleTimeString("pt-BR");
-}, 1000);
+const db = firebase.database();
+const statusRef = db.ref("painel/status");
+const somRef = db.ref("painel/som");
 
-/* VOZ */
-let audioAtivado = false;
-let ultimaFalaId = null;
-
-window.ativarAudio = () => {
-  speechSynthesis.speak(new SpeechSynthesisUtterance("Sistema de senhas ativado"));
-  audioAtivado = true;
-};
-
-/* FALAR */
-function falar(texto) {
-  if (!audioAtivado) return;
-  const msg = new SpeechSynthesisUtterance(texto);
-  msg.lang = "pt-BR";
-  speechSynthesis.speak(msg);
-  const a = document.getElementById("tindon");
-  a.currentTime = 0;
-  a.play().catch(()=>{});
-}
-
-/* RENDER */
-function render(e) {
-  senha.textContent = e.senha;
-  setor.textContent = e.setor;
-  horaAtendimento.textContent = e.horaAtendimento;
-  docAtual.textContent = e.docAtual;
-  docProx.textContent = e.docProx;
-  matAtual.textContent = e.matAtual;
-  matProx.textContent = e.matProx;
-}
-
-/* SYNC REALTIME */
-onValue(estadoRef, snap => {
-  if (!snap.exists()) return;
-  const e = snap.val();
-  render(e);
-
-  if (e.falaId && e.falaId !== ultimaFalaId) {
-    ultimaFalaId = e.falaId;
-    falar(e.fala);
-  }
+// 🔄 SINCRONIZA STATUS
+statusRef.on("value", snap => {
+    if (snap.exists()) {
+        document.getElementById("status").innerText = snap.val();
+    }
 });
 
-/* CHAMAR COM TRANSACTION */
-window.chamar = function(tipo) {
-  runTransaction(estadoRef, e => {
-    if (!e) {
-      e = {
-        docAtual: "--", docProx: 1,
-        matAtual: "--", matProx: 1,
-        senha: "--",
-        setor: "AGUARDANDO",
-        horaAtendimento: "--:--",
-        fala: "",
-        falaId: 0
-      };
+// 🔊 SINCRONIZA SOM
+somRef.on("value", snap => {
+    if (snap.val() === true) {
+        document.getElementById("audio").play();
+        somRef.set(false); // reseta para evitar loop
     }
+});
 
-    e.horaAtendimento = new Date().toLocaleTimeString("pt-BR", {
-      hour: "2-digit", minute: "2-digit"
-    });
+// 🎯 FUNÇÕES
+function setStatus(texto) {
+    statusRef.set(texto);
+}
 
-    if (tipo === "DOCUMENTACAO") {
-      e.docAtual = e.docProx++;
-      e.senha = e.docAtual;
-      e.setor = "DOCUMENTAÇÃO";
-      e.fala = `Senha ${e.docAtual}, documentação`;
-    } else {
-      e.matAtual = e.matProx++;
-      e.senha = e.matAtual;
-      e.setor = "MATRÍCULA";
-      e.fala = `Senha ${e.matAtual}, matrícula`;
+function resetar() {
+    statusRef.set("AGUARDANDO");
+}
+
+function ativarSom() {
+    somRef.set(true);
+}
+
+// ⌨️ ATALHOS DE TECLADO
+document.addEventListener("keydown", function(e) {
+    if (e.key === "F1") {
+        e.preventDefault();
+        setStatus("DOCUMENTAÇÃO");
     }
-
-    e.falaId = Date.now();
-    return e;
-  });
-};
-
-/* RESET */
-window.redefinir = function() {
-  if (!confirm("Deseja redefinir todas as senhas?")) return;
-  set(estadoRef, {
-    docAtual: "--", docProx: 1,
-    matAtual: "--", matProx: 1,
-    senha: "--",
-    setor: "AGUARDANDO",
-    horaAtendimento: "--:--",
-    fala: "",
-    falaId: Date.now()
-  });
-};
+    if (e.key === "F2") {
+        e.preventDefault();
+        setStatus("MATRÍCULA");
+    }
+    if (e.key === "F3") {
+        e.preventDefault();
+        resetar();
+    }
+    if (e.key === "F4") {
+        e.preventDefault();
+        ativarSom();
+    }
+});
 </script>
 
 </body>
