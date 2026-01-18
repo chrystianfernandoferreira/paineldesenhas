@@ -2,126 +2,92 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport"
-      content="width=device-width, height=device-height,
-               initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Painel de Atendimento</title>
 
 <style>
-* {
-    box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 html, body {
-    width: 100%;
-    height: 100%;
     margin: 0;
-    overflow: hidden;
+    min-height: 100dvh;
     background: #111827;
     font-family: Arial, Helvetica, sans-serif;
     color: #fff;
 }
 
-/* CONTAINER GERAL */
 .screen {
-    min-height: 100vh;
-    width: 100vw;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     background: linear-gradient(135deg, #7f1d1d, #374151);
 }
 
-/* CABEÇALHO */
 .header {
     background: #991b1b;
     text-align: center;
-    padding: 2vmin;
-}
-
-.header h1 {
-    margin: 0;
-    font-size: clamp(75px, 4vmin, 92px);
+    padding: 20px;
 }
 
 .senha {
-    font-size: clamp(140px, 14vmin, 200px);
+    font-size: 140px;
     font-weight: bold;
     color: #fde047;
-    line-height: 1;
 }
 
 .setor {
-    font-size: clamp(75px, 3.5vmin, 46px);
+    font-size: 48px;
 }
 
 .horarios {
-    font-size: clamp(20px, 2.5vmin, 30px);
-    margin-top: 0.5vmin;
+    font-size: 20px;
 }
 
-/* CONTEÚDO */
 .content {
     flex: 1;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 3vmin;
-    padding: 3vmin;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+    padding: 20px;
 }
 
 .section {
     background: #f3f4f6;
     color: #000;
-    border-radius: 2vmin;
-    padding: 3vmin;
+    border-radius: 20px;
+    padding: 30px;
     text-align: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
 }
 
-.section h2 {
-    margin-top: 0;
-    font-size: clamp(40px, 3.5vmin, 54px);
-    color: #7f1d1d;
-}
-
-.info {
-    font-size: clamp(40px, 3vmin, 46px);
-}
-
-/* CONTROLES */
 .controls {
     background: #020617;
     text-align: center;
-    padding: 1.5vmin;
+    padding: 20px;
 }
 
 button {
-    font-size: clamp(16px, 2.5vmin, 30px);
-    padding: 1vmin 3vmin;
-    margin: 0.5vmin;
+    font-size: 22px;
+    padding: 12px 22px;
+    margin: 6px;
     border: none;
-    border-radius: 1.5vmin;
+    border-radius: 12px;
     cursor: pointer;
 }
 
 .doc { background: #dc2626; color: #fff; }
 .mat { background: #334155; color: #fff; }
 .reset { background: #f59e0b; color: #000; }
+.audio { background: #16a34a; color: #fff; }
 
-/* RODAPÉ */
 .footer {
     background: #020617;
     text-align: center;
-    padding: 1vmin;
-    font-size: clamp(14px, 2.2vmin, 22px);
-    color: #e5e7eb;
+    padding: 14px;
 }
 </style>
 </head>
 
-<body onclick="entrarTelaCheia()">
+<body>
 
 <div class="screen">
 
@@ -138,133 +104,147 @@ button {
     <div class="content">
         <div class="section">
             <h2>Documentação</h2>
-            <div class="info">Atendendo: <strong id="docAtual">--</strong></div>
-            <div class="info">Próxima: <strong id="docProx">1</strong></div>
+            <p>Atual: <strong id="docAtual">--</strong></p>
+            <p>Próxima: <strong id="docProx">1</strong></p>
         </div>
 
         <div class="section">
             <h2>Matrícula</h2>
-            <div class="info">Atendendo: <strong id="matAtual">--</strong></div>
-            <div class="info">Próxima: <strong id="matProx">1</strong></div>
+            <p>Atual: <strong id="matAtual">--</strong></p>
+            <p>Próxima: <strong id="matProx">1</strong></p>
         </div>
     </div>
 
     <div class="controls">
-        <button class="doc" onclick="chamar('DOCUMENTACAO')">📄 Documentação (F1)</button>
-        <button class="mat" onclick="chamar('MATRICULA')">📝 Matrícula (F2)</button>
-        <button class="reset" onclick="redefinir()">🔄 Redefinir (F3)</button>
+        <button class="audio" onclick="ativarAudio()">🔊 Ativar Som</button><br><br>
+        <button class="doc" onclick="chamar('DOCUMENTACAO')">📄 Documentação</button>
+        <button class="mat" onclick="chamar('MATRICULA')">📝 Matrícula</button>
+        <button class="reset" onclick="redefinir()">🔄 Redefinir</button>
     </div>
 
     <div class="footer">
         Etec Sylvio de Mattos Carvalho • Centro Paula Souza
     </div>
-
 </div>
 
-<audio id="tindon"
-       src="https://actions.google.com/sounds/v1/alarms/airport_chime.ogg"></audio>
+<audio id="tindon" src="https://actions.google.com/sounds/v1/alarms/airport_chime.ogg"></audio>
 
-<script>
-/* FULLSCREEN VIA CLIQUE */
-function entrarTelaCheia() {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {});
-    }
-}
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getDatabase, ref, onValue, runTransaction, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-/* ESTADO */
-let estado = JSON.parse(localStorage.getItem("estado")) || {
-    docAtual: "--", docProx: 1,
-    matAtual: "--", matProx: 1,
-    senha: "--",
-    setor: "AGUARDANDO",
-    horaAtendimento: "--:--"
+/* CONFIG FIREBASE */
+const firebaseConfig = {
+  apiKey: "AIzaSyCfaPNHgxrem88R7x8dKD9j2SzTYPm9v10",
+  authDomain: "painel-senhas-etec.firebaseapp.com",
+  databaseURL: "https://painel-senhas-etec-default-rtdb.firebaseio.com",
+  projectId: "painel-senhas-etec",
+  storageBucket: "painel-senhas-etec.appspot.com",
+  messagingSenderId: "52328553080",
+  appId: "1:52328553080:web:1fcdda82a6bdbf70732b8d"
 };
 
-/* RELÓGIO */
-function atualizarHoraAtual() {
-    horaAtual.textContent = new Date().toLocaleTimeString("pt-BR");
-}
-setInterval(atualizarHoraAtual, 1000);
-atualizarHoraAtual();
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const estadoRef = ref(db, "estado");
 
-function horaAtendimentoAtual() {
-    return new Date().toLocaleTimeString("pt-BR", {
-        hour: "2-digit",
-        minute: "2-digit"
-    });
-}
+/* RELÓGIO */
+setInterval(() => {
+  horaAtual.textContent = new Date().toLocaleTimeString("pt-BR");
+}, 1000);
 
 /* VOZ */
-function obterVozPtBR() {
-    return speechSynthesis.getVoices().find(v => v.lang === "pt-BR");
-}
+let audioAtivado = false;
+let ultimaFalaId = null;
 
+window.ativarAudio = () => {
+  speechSynthesis.speak(new SpeechSynthesisUtterance("Sistema de senhas ativado"));
+  audioAtivado = true;
+};
+
+/* FALAR */
 function falar(texto) {
-    const msg = new SpeechSynthesisUtterance(texto);
-    msg.lang = "pt-BR";
-    msg.rate = 0.9;
-    msg.pitch = 1.1;
-    msg.voice = obterVozPtBR();
-    speechSynthesis.speak(msg);
+  if (!audioAtivado) return;
+  const msg = new SpeechSynthesisUtterance(texto);
+  msg.lang = "pt-BR";
+  speechSynthesis.speak(msg);
+  const a = document.getElementById("tindon");
+  a.currentTime = 0;
+  a.play().catch(()=>{});
 }
 
-/* ATUALIZA TELA */
-function atualizarTela() {
-    senha.textContent = estado.senha;
-    setor.textContent = estado.setor;
-    horaAtendimento.textContent = estado.horaAtendimento;
-    docAtual.textContent = estado.docAtual;
-    docProx.textContent = estado.docProx;
-    matAtual.textContent = estado.matAtual;
-    matProx.textContent = estado.matProx;
-    localStorage.setItem("estado", JSON.stringify(estado));
-}
-atualizarTela();
-
-/* CHAMAR */
-function chamar(tipo) {
-    tindon.play();
-    setTimeout(() => {
-        estado.horaAtendimento = horaAtendimentoAtual();
-
-        if (tipo === "DOCUMENTACAO") {
-            estado.docAtual = estado.docProx++;
-            estado.senha = estado.docAtual;
-            estado.setor = "DOCUMENTAÇÃO";
-            falar(`Senha ${estado.docAtual}, documentação`);
-        } else {
-            estado.matAtual = estado.matProx++;
-            estado.senha = estado.matAtual;
-            estado.setor = "MATRÍCULA";
-            falar(`Senha ${estado.matAtual}, matrícula`);
-        }
-        atualizarTela();
-    }, 900);
+/* RENDER */
+function render(e) {
+  senha.textContent = e.senha;
+  setor.textContent = e.setor;
+  horaAtendimento.textContent = e.horaAtendimento;
+  docAtual.textContent = e.docAtual;
+  docProx.textContent = e.docProx;
+  matAtual.textContent = e.matAtual;
+  matProx.textContent = e.matProx;
 }
 
-/* REDEFINIR */
-function redefinir() {
-    if (!confirm("Deseja redefinir todas as senhas?")) return;
-    estado = {
+/* SYNC REALTIME */
+onValue(estadoRef, snap => {
+  if (!snap.exists()) return;
+  const e = snap.val();
+  render(e);
+
+  if (e.falaId && e.falaId !== ultimaFalaId) {
+    ultimaFalaId = e.falaId;
+    falar(e.fala);
+  }
+});
+
+/* CHAMAR COM TRANSACTION */
+window.chamar = function(tipo) {
+  runTransaction(estadoRef, e => {
+    if (!e) {
+      e = {
         docAtual: "--", docProx: 1,
         matAtual: "--", matProx: 1,
         senha: "--",
         setor: "AGUARDANDO",
-        horaAtendimento: "--:--"
-    };
-    atualizarTela();
-}
+        horaAtendimento: "--:--",
+        fala: "",
+        falaId: 0
+      };
+    }
 
-/* ATALHOS */
-document.addEventListener("keydown", e => {
-    if (e.key === "F1") { e.preventDefault(); chamar("DOCUMENTACAO"); }
-    if (e.key === "F2") { e.preventDefault(); chamar("MATRICULA"); }
-    if (e.key === "F3") { e.preventDefault(); redefinir(); }
-});
+    e.horaAtendimento = new Date().toLocaleTimeString("pt-BR", {
+      hour: "2-digit", minute: "2-digit"
+    });
 
-/* VOZES */
-speechSynthesis.onvoiceschanged = () => {};
+    if (tipo === "DOCUMENTACAO") {
+      e.docAtual = e.docProx++;
+      e.senha = e.docAtual;
+      e.setor = "DOCUMENTAÇÃO";
+      e.fala = `Senha ${e.docAtual}, documentação`;
+    } else {
+      e.matAtual = e.matProx++;
+      e.senha = e.matAtual;
+      e.setor = "MATRÍCULA";
+      e.fala = `Senha ${e.matAtual}, matrícula`;
+    }
+
+    e.falaId = Date.now();
+    return e;
+  });
+};
+
+/* RESET */
+window.redefinir = function() {
+  if (!confirm("Deseja redefinir todas as senhas?")) return;
+  set(estadoRef, {
+    docAtual: "--", docProx: 1,
+    matAtual: "--", matProx: 1,
+    senha: "--",
+    setor: "AGUARDANDO",
+    horaAtendimento: "--:--",
+    fala: "",
+    falaId: Date.now()
+  });
+};
 </script>
 
 </body>
